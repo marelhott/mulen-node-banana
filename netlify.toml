@@ -3,6 +3,18 @@
   publish = ".next"
 
 [functions]
-  # Exclude large static assets from the serverless function bundle
-  # They will still be available on the CDN via the public folder
-  included_files = ["!public/community-workflows/**"]
+  node_bundler = "esbuild"
+
+[functions."*"]
+  excluded_files = [
+    "public/community-workflows/**",
+    "community-workflows/**",
+    "**/*.psd",
+    "**/*.zip",
+    "**/*.mp4",
+    "**/*.mov",
+    "**/*.wav",
+    "**/*.png",
+    "**/*.jpg",
+    "**/*.webp"
+  ]
