@@ -1,0 +1,8 @@
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[functions]
+  # Exclude large static assets from the serverless function bundle
+  # They will still be available on the CDN via the public folder
+  included_files = ["!public/community-workflows/**"]

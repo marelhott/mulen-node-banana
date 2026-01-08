@@ -1,4 +1,33 @@
 {
     "success": true,
-    "workflows": []
+    "workflows": [
+        {
+            "id": "contact-sheet-ChrisWalkman",
+            "name": "Chris Walkman",
+            "filename": "contact-sheet-ChrisWalkman.json",
+            "author": "Willie",
+            "size": 86452716
+        },
+        {
+            "id": "contact-sheet-billsSupra",
+            "name": "Bills Supra",
+            "filename": "contact-sheet-billsSupra.json",
+            "author": "Willie",
+            "size": 82379615
+        },
+        {
+            "id": "contact-sheet-jpow",
+            "name": "Jpow",
+            "filename": "contact-sheet-jpow.json",
+            "author": "Willie",
+            "size": 54517661
+        },
+        {
+            "id": "contact-sheet-tim",
+            "name": "Tim",
+            "filename": "contact-sheet-tim.json",
+            "author": "Willie",
+            "size": 58390945
+        }
+    ]
 }
