@@ -26,7 +26,7 @@ export function QuickstartTemplatesView({
   useEffect(() => {
     async function fetchCommunityWorkflows() {
       try {
-        const response = await fetch("/api/community-workflows");
+        const response = await fetch("/community-workflows/index.json");
         const result = await response.json();
 
         if (result.success) {
@@ -84,16 +84,14 @@ export function QuickstartTemplatesView({
       setError(null);
 
       try {
-        const response = await fetch(`/api/community-workflows/${workflowId}`);
-        const result = await response.json();
+        const response = await fetch(`/community-workflows/${workflowId}.json`);
 
-        if (!result.success) {
-          throw new Error(result.error || "Failed to load workflow");
+        if (!response.ok) {
+          throw new Error("Failed to load workflow");
         }
 
-        if (result.workflow) {
-          onWorkflowSelected(result.workflow);
-        }
+        const workflow = await response.json();
+        onWorkflowSelected(workflow);
       } catch (err) {
         console.error("Error loading community workflow:", err);
         setError(err instanceof Error ? err.message : "Failed to load workflow");
@@ -131,10 +129,9 @@ export function QuickstartTemplatesView({
                 disabled={isLoading}
                 className={`
                   group flex items-center gap-2.5 px-3 py-2.5 rounded-lg border transition-all text-left
-                  ${
-                    loadingWorkflowId === preset.id
-                      ? "bg-blue-600/20 border-blue-500/50"
-                      : "bg-neutral-800/50 border-neutral-700 hover:border-neutral-600 hover:bg-neutral-800"
+                  ${loadingWorkflowId === preset.id
+                    ? "bg-blue-600/20 border-blue-500/50"
+                    : "bg-neutral-800/50 border-neutral-700 hover:border-neutral-600 hover:bg-neutral-800"
                   }
                   ${isLoading && loadingWorkflowId !== preset.id ? "opacity-50" : ""}
                   ${isLoading ? "cursor-not-allowed" : "cursor-pointer"}
@@ -143,10 +140,9 @@ export function QuickstartTemplatesView({
                 <div
                   className={`
                     w-8 h-8 rounded-md flex items-center justify-center flex-shrink-0
-                    ${
-                      loadingWorkflowId === preset.id
-                        ? "bg-blue-500/30"
-                        : "bg-neutral-700/50 group-hover:bg-neutral-700"
+                    ${loadingWorkflowId === preset.id
+                      ? "bg-blue-500/30"
+                      : "bg-neutral-700/50 group-hover:bg-neutral-700"
                     }
                   `}
                 >
@@ -243,10 +239,9 @@ export function QuickstartTemplatesView({
                   disabled={isLoading}
                   className={`
                     group flex items-center gap-2.5 px-3 py-2.5 rounded-lg border transition-all text-left
-                    ${
-                      loadingWorkflowId === workflow.id
-                        ? "bg-purple-600/20 border-purple-500/50"
-                        : "bg-neutral-800/50 border-neutral-700 hover:border-neutral-600 hover:bg-neutral-800"
+                    ${loadingWorkflowId === workflow.id
+                      ? "bg-purple-600/20 border-purple-500/50"
+                      : "bg-neutral-800/50 border-neutral-700 hover:border-neutral-600 hover:bg-neutral-800"
                     }
                     ${isLoading && loadingWorkflowId !== workflow.id ? "opacity-50" : ""}
                     ${isLoading ? "cursor-not-allowed" : "cursor-pointer"}
@@ -255,10 +250,9 @@ export function QuickstartTemplatesView({
                   <div
                     className={`
                       w-8 h-8 rounded-md flex items-center justify-center flex-shrink-0
-                      ${
-                        loadingWorkflowId === workflow.id
-                          ? "bg-purple-500/30"
-                          : "bg-neutral-700/50 group-hover:bg-neutral-700"
+                      ${loadingWorkflowId === workflow.id
+                        ? "bg-purple-500/30"
+                        : "bg-neutral-700/50 group-hover:bg-neutral-700"
                       }
                     `}
                   >
