@@ -7,8 +7,8 @@ export const dynamic = 'force-dynamic'; // Ensure this route is always dynamic
 
 // Map model types to Gemini model IDs
 const MODEL_MAP: Record<ModelType, string> = {
-  "nano-banana": "gemini-2.5-flash-image", // Updated to correct model name
-  "nano-banana-pro": "gemini-3-pro-image-preview",
+  "nano-banana": "gemini-2.5-flash-image", // Gemini 2.5 Flash Image (Nano Banana)
+  "nano-banana-pro": "gemini-3-pro-image-preview", // Gemini 3 Pro Image Preview
 };
 
 export async function POST(request: NextRequest) {
