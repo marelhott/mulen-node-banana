@@ -592,7 +592,7 @@ export function WorkflowCanvas() {
     setConnectionDrop(null);
   }, []);
 
-  // Custom wheel handler for macOS trackpad support
+  // Custom wheel handler - always zoom on scroll
   const handleWheel = useCallback((event: React.WheelEvent) => {
     // Check if scrolling over a scrollable element (e.g., textarea, scrollable div)
     const target = event.target as HTMLElement;
@@ -603,40 +603,11 @@ export function WorkflowCanvas() {
       return;
     }
 
-    // Pinch gesture (ctrlKey) always zooms
-    if (event.ctrlKey) {
-      event.preventDefault();
-      if (event.deltaY < 0) zoomIn();
-      else zoomOut();
-      return;
-    }
-
-    // On macOS, differentiate trackpad from mouse
-    if (isMacOS) {
-      const nativeEvent = event.nativeEvent;
-      if (isMouseWheel(nativeEvent)) {
-        // Mouse wheel → zoom
-        event.preventDefault();
-        if (event.deltaY < 0) zoomIn();
-        else zoomOut();
-      } else {
-        // Trackpad scroll → pan
-        event.preventDefault();
-        const viewport = getViewport();
-        setViewport({
-          x: viewport.x - event.deltaX,
-          y: viewport.y - event.deltaY,
-          zoom: viewport.zoom,
-        });
-      }
-      return;
-    }
-
-    // Non-macOS: default zoom behavior
+    // All wheel events = zoom (simplified from trackpad/mouse detection)
     event.preventDefault();
     if (event.deltaY < 0) zoomIn();
     else zoomOut();
-  }, [zoomIn, zoomOut, getViewport, setViewport]);
+  }, [zoomIn, zoomOut]);
 
   // Get copy/paste functions and clipboard from store
   const { copySelectedNodes, pasteNodes, clearClipboard, clipboard } = useWorkflowStore();
