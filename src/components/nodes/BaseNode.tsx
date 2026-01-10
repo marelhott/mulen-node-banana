@@ -43,6 +43,7 @@ export function BaseNode({
   const currentNodeId = useWorkflowStore((state) => state.currentNodeId);
   const groups = useWorkflowStore((state) => state.groups);
   const nodes = useWorkflowStore((state) => state.nodes);
+  const removeNode = useWorkflowStore((state) => state.removeNode);
   const isCurrentlyExecuting = currentNodeId === id;
   const { getNodes, setNodes } = useReactFlow();
 
@@ -237,11 +238,10 @@ export function BaseNode({
               onClick={() => setIsEditingComment(!isEditingComment)}
               onMouseEnter={() => comment && setShowCommentTooltip(true)}
               onMouseLeave={() => setShowCommentTooltip(false)}
-              className={`nodrag nopan p-0.5 rounded transition-colors ${
-                comment
-                  ? "text-blue-400 hover:text-blue-200"
-                  : "text-neutral-500 hover:text-neutral-200 border border-neutral-600"
-              }`}
+              className={`nodrag nopan p-0.5 rounded transition-colors ${comment
+                ? "text-blue-400 hover:text-blue-200"
+                : "text-neutral-500 hover:text-neutral-200 border border-neutral-600"
+                }`}
               title={comment ? "Edit comment" : "Add comment"}
             >
               {comment ? (
@@ -300,6 +300,28 @@ export function BaseNode({
                 </div>
               </div>
             )}
+          </div>
+
+          {/* Delete Button */}
+          <div className="relative ml-2 shrink-0 group">
+            <button
+              onClick={() => removeNode(id)}
+              className="nodrag nopan p-0.5 rounded transition-all duration-200 ease-in-out text-neutral-500 group-hover:text-red-400 border border-neutral-600 group-hover:border-red-500 flex items-center overflow-hidden group-hover:pr-2"
+              title="Delete node"
+            >
+              <svg
+                className="w-3.5 h-3.5 flex-shrink-0"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+              <span className="max-w-0 opacity-0 whitespace-nowrap text-[10px] transition-all duration-200 ease-in-out overflow-hidden group-hover:max-w-[60px] group-hover:opacity-100 group-hover:ml-1">
+                Delete
+              </span>
+            </button>
           </div>
 
           {/* Expand Button */}

@@ -685,16 +685,6 @@ export function WorkflowCanvas() {
       return;
     }
 
-    // Handle delete (Delete or Backspace)
-    if (event.key === "Delete" || event.key === "Backspace") {
-      event.preventDefault();
-      const selectedNodes = nodes.filter((node) => node.selected);
-      selectedNodes.forEach((node) => {
-        removeNode(node.id);
-      });
-      return;
-    }
-
     // Helper to get viewport center position in flow coordinates
     const getViewportCenter = () => {
       const viewport = getViewport();
