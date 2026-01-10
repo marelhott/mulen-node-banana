@@ -129,7 +129,7 @@ const isMouseWheel = (event: WheelEvent): boolean => {
   // Fallback: large delta values suggest mouse wheel
   const threshold = 50;
   return Math.abs(event.deltaY) >= threshold &&
-         Math.abs(event.deltaY) % 40 === 0; // Mouse deltas often in multiples
+    Math.abs(event.deltaY) % 40 === 0; // Mouse deltas often in multiples
 };
 
 // Check if an element can scroll and has room to scroll in the given direction
@@ -188,7 +188,7 @@ const findScrollableAncestor = (target: HTMLElement, deltaX: number, deltaY: num
 };
 
 export function WorkflowCanvas() {
-  const { nodes, edges, groups, onNodesChange, onEdgesChange, onConnect, addNode, updateNodeData, loadWorkflow, getNodeById, addToGlobalHistory, setNodeGroupId, executeWorkflow, isModalOpen, showQuickstart, setShowQuickstart } =
+  const { nodes, edges, groups, onNodesChange, onEdgesChange, onConnect, addNode, updateNodeData, loadWorkflow, getNodeById, addToGlobalHistory, setNodeGroupId, executeWorkflow, isModalOpen, showQuickstart, setShowQuickstart, removeNode } =
     useWorkflowStore();
   const { screenToFlowPosition, getViewport, zoomIn, zoomOut, setViewport } = useReactFlow();
   const [isDragOver, setIsDragOver] = useState(false);
@@ -336,17 +336,17 @@ export function WorkflowCanvas() {
               // Create the connection
               const connection: Connection = isFromSource
                 ? {
-                    source: connectionState.fromNode.id,
-                    sourceHandle: fromHandleId,
-                    target: targetNodeId,
-                    targetHandle: compatibleHandle,
-                  }
+                  source: connectionState.fromNode.id,
+                  sourceHandle: fromHandleId,
+                  target: targetNodeId,
+                  targetHandle: compatibleHandle,
+                }
                 : {
-                    source: targetNodeId,
-                    sourceHandle: compatibleHandle,
-                    target: connectionState.fromNode.id,
-                    targetHandle: fromHandleId,
-                  };
+                  source: targetNodeId,
+                  sourceHandle: compatibleHandle,
+                  target: connectionState.fromNode.id,
+                  targetHandle: fromHandleId,
+                };
 
               if (isValidConnection(connection)) {
                 handleConnect(connection);
@@ -685,209 +685,219 @@ export function WorkflowCanvas() {
       return;
     }
 
-      // Helper to get viewport center position in flow coordinates
-      const getViewportCenter = () => {
-        const viewport = getViewport();
-        const centerX = (-viewport.x + window.innerWidth / 2) / viewport.zoom;
-        const centerY = (-viewport.y + window.innerHeight / 2) / viewport.zoom;
-        return { centerX, centerY };
-      };
+    // Handle delete (Delete or Backspace)
+    if (event.key === "Delete" || event.key === "Backspace") {
+      event.preventDefault();
+      const selectedNodes = nodes.filter((node) => node.selected);
+      selectedNodes.forEach((node) => {
+        removeNode(node.id);
+      });
+      return;
+    }
 
-      // Handle node creation hotkeys (Shift + key)
-      if (event.shiftKey && !event.ctrlKey && !event.metaKey) {
-        const key = event.key.toLowerCase();
-        let nodeType: NodeType | null = null;
+    // Helper to get viewport center position in flow coordinates
+    const getViewportCenter = () => {
+      const viewport = getViewport();
+      const centerX = (-viewport.x + window.innerWidth / 2) / viewport.zoom;
+      const centerY = (-viewport.y + window.innerHeight / 2) / viewport.zoom;
+      return { centerX, centerY };
+    };
 
-        switch (key) {
-          case "p":
-            nodeType = "prompt";
-            break;
-          case "i":
-            nodeType = "imageInput";
-            break;
-          case "g":
-            nodeType = "nanoBanana";
-            break;
-          case "l":
-            nodeType = "llmGenerate";
-            break;
-          case "a":
-            nodeType = "annotation";
-            break;
-        }
+    // Handle node creation hotkeys (Shift + key)
+    if (event.shiftKey && !event.ctrlKey && !event.metaKey) {
+      const key = event.key.toLowerCase();
+      let nodeType: NodeType | null = null;
 
-        if (nodeType) {
-          event.preventDefault();
-          const { centerX, centerY } = getViewportCenter();
-          // Offset by half the default node dimensions to center it
-          const defaultDimensions: Record<NodeType, { width: number; height: number }> = {
-            imageInput: { width: 300, height: 280 },
-            annotation: { width: 300, height: 280 },
-            prompt: { width: 320, height: 220 },
-            nanoBanana: { width: 300, height: 300 },
-            llmGenerate: { width: 320, height: 360 },
-            splitGrid: { width: 300, height: 320 },
-            output: { width: 320, height: 320 },
-          };
-          const dims = defaultDimensions[nodeType];
-          addNode(nodeType, { x: centerX - dims.width / 2, y: centerY - dims.height / 2 });
-          return;
-        }
+      switch (key) {
+        case "p":
+          nodeType = "prompt";
+          break;
+        case "i":
+          nodeType = "imageInput";
+          break;
+        case "g":
+          nodeType = "nanoBanana";
+          break;
+        case "l":
+          nodeType = "llmGenerate";
+          break;
+        case "a":
+          nodeType = "annotation";
+          break;
       }
 
-      // Handle paste (Ctrl/Cmd + V)
-      if ((event.ctrlKey || event.metaKey) && event.key === "v") {
+      if (nodeType) {
         event.preventDefault();
+        const { centerX, centerY } = getViewportCenter();
+        // Offset by half the default node dimensions to center it
+        const defaultDimensions: Record<NodeType, { width: number; height: number }> = {
+          imageInput: { width: 300, height: 280 },
+          annotation: { width: 300, height: 280 },
+          prompt: { width: 320, height: 220 },
+          nanoBanana: { width: 300, height: 300 },
+          llmGenerate: { width: 320, height: 360 },
+          splitGrid: { width: 300, height: 320 },
+          output: { width: 320, height: 320 },
+        };
+        const dims = defaultDimensions[nodeType];
+        addNode(nodeType, { x: centerX - dims.width / 2, y: centerY - dims.height / 2 });
+        return;
+      }
+    }
 
-        // If we have nodes in the internal clipboard, prioritize pasting those
-        if (clipboard && clipboard.nodes.length > 0) {
-          pasteNodes();
-          clearClipboard(); // Clear so next paste uses system clipboard
-          return;
-        }
+    // Handle paste (Ctrl/Cmd + V)
+    if ((event.ctrlKey || event.metaKey) && event.key === "v") {
+      event.preventDefault();
 
-        // Check system clipboard for images first, then text
-        navigator.clipboard.read().then(async (items) => {
-          for (const item of items) {
-            // Check for image
-            const imageType = item.types.find(type => type.startsWith('image/'));
-            if (imageType) {
-              const blob = await item.getType(imageType);
-              const reader = new FileReader();
-              reader.onload = (e) => {
-                const dataUrl = e.target?.result as string;
-                const viewport = getViewport();
-                const centerX = (-viewport.x + window.innerWidth / 2) / viewport.zoom;
-                const centerY = (-viewport.y + window.innerHeight / 2) / viewport.zoom;
-
-                const img = new Image();
-                img.onload = () => {
-                  // ImageInput node default dimensions: 300x280
-                  const nodeId = addNode("imageInput", { x: centerX - 150, y: centerY - 140 });
-                  updateNodeData(nodeId, {
-                    image: dataUrl,
-                    filename: `pasted-${Date.now()}.png`,
-                    dimensions: { width: img.width, height: img.height },
-                  });
-                };
-                img.src = dataUrl;
-              };
-              reader.readAsDataURL(blob);
-              return; // Exit after handling image
-            }
-
-            // Check for text
-            if (item.types.includes('text/plain')) {
-              const blob = await item.getType('text/plain');
-              const text = await blob.text();
-              if (text.trim()) {
-                const viewport = getViewport();
-                const centerX = (-viewport.x + window.innerWidth / 2) / viewport.zoom;
-                const centerY = (-viewport.y + window.innerHeight / 2) / viewport.zoom;
-                // Prompt node default dimensions: 320x220
-                const nodeId = addNode("prompt", { x: centerX - 160, y: centerY - 110 });
-                updateNodeData(nodeId, { prompt: text });
-                return; // Exit after handling text
-              }
-            }
-          }
-        }).catch(() => {
-          // Clipboard API failed - nothing to paste
-        });
+      // If we have nodes in the internal clipboard, prioritize pasting those
+      if (clipboard && clipboard.nodes.length > 0) {
+        pasteNodes();
+        clearClipboard(); // Clear so next paste uses system clipboard
         return;
       }
 
-      const selectedNodes = nodes.filter((node) => node.selected);
-      if (selectedNodes.length < 2) return;
+      // Check system clipboard for images first, then text
+      navigator.clipboard.read().then(async (items) => {
+        for (const item of items) {
+          // Check for image
+          const imageType = item.types.find(type => type.startsWith('image/'));
+          if (imageType) {
+            const blob = await item.getType(imageType);
+            const reader = new FileReader();
+            reader.onload = (e) => {
+              const dataUrl = e.target?.result as string;
+              const viewport = getViewport();
+              const centerX = (-viewport.x + window.innerWidth / 2) / viewport.zoom;
+              const centerY = (-viewport.y + window.innerHeight / 2) / viewport.zoom;
 
-      const STACK_GAP = 20;
+              const img = new Image();
+              img.onload = () => {
+                // ImageInput node default dimensions: 300x280
+                const nodeId = addNode("imageInput", { x: centerX - 150, y: centerY - 140 });
+                updateNodeData(nodeId, {
+                  image: dataUrl,
+                  filename: `pasted-${Date.now()}.png`,
+                  dimensions: { width: img.width, height: img.height },
+                });
+              };
+              img.src = dataUrl;
+            };
+            reader.readAsDataURL(blob);
+            return; // Exit after handling image
+          }
 
-      if (event.key === "v" || event.key === "V") {
-        // Stack vertically - sort by current y position to maintain relative order
-        const sortedNodes = [...selectedNodes].sort((a, b) => a.position.y - b.position.y);
+          // Check for text
+          if (item.types.includes('text/plain')) {
+            const blob = await item.getType('text/plain');
+            const text = await blob.text();
+            if (text.trim()) {
+              const viewport = getViewport();
+              const centerX = (-viewport.x + window.innerWidth / 2) / viewport.zoom;
+              const centerY = (-viewport.y + window.innerHeight / 2) / viewport.zoom;
+              // Prompt node default dimensions: 320x220
+              const nodeId = addNode("prompt", { x: centerX - 160, y: centerY - 110 });
+              updateNodeData(nodeId, { prompt: text });
+              return; // Exit after handling text
+            }
+          }
+        }
+      }).catch(() => {
+        // Clipboard API failed - nothing to paste
+      });
+      return;
+    }
 
-        // Use the leftmost x position as the alignment point
-        const alignX = Math.min(...sortedNodes.map((n) => n.position.x));
+    const selectedNodes = nodes.filter((node) => node.selected);
+    if (selectedNodes.length < 2) return;
 
-        let currentY = sortedNodes[0].position.y;
+    const STACK_GAP = 20;
 
-        sortedNodes.forEach((node) => {
-          const nodeHeight = (node.style?.height as number) || (node.measured?.height) || 200;
+    if (event.key === "v" || event.key === "V") {
+      // Stack vertically - sort by current y position to maintain relative order
+      const sortedNodes = [...selectedNodes].sort((a, b) => a.position.y - b.position.y);
 
-          onNodesChange([
-            {
-              type: "position",
-              id: node.id,
-              position: { x: alignX, y: currentY },
+      // Use the leftmost x position as the alignment point
+      const alignX = Math.min(...sortedNodes.map((n) => n.position.x));
+
+      let currentY = sortedNodes[0].position.y;
+
+      sortedNodes.forEach((node) => {
+        const nodeHeight = (node.style?.height as number) || (node.measured?.height) || 200;
+
+        onNodesChange([
+          {
+            type: "position",
+            id: node.id,
+            position: { x: alignX, y: currentY },
+          },
+        ]);
+
+        currentY += nodeHeight + STACK_GAP;
+      });
+    } else if (event.key === "h" || event.key === "H") {
+      // Stack horizontally - sort by current x position to maintain relative order
+      const sortedNodes = [...selectedNodes].sort((a, b) => a.position.x - b.position.x);
+
+      // Use the topmost y position as the alignment point
+      const alignY = Math.min(...sortedNodes.map((n) => n.position.y));
+
+      let currentX = sortedNodes[0].position.x;
+
+      sortedNodes.forEach((node) => {
+        const nodeWidth = (node.style?.width as number) || (node.measured?.width) || 220;
+
+        onNodesChange([
+          {
+            type: "position",
+            id: node.id,
+            position: { x: currentX, y: alignY },
+          },
+        ]);
+
+        currentX += nodeWidth + STACK_GAP;
+      });
+    } else if (event.key === "g" || event.key === "G") {
+      // Arrange as grid
+      const count = selectedNodes.length;
+      const cols = Math.ceil(Math.sqrt(count));
+
+      // Sort nodes by their current position (top-to-bottom, left-to-right)
+      const sortedNodes = [...selectedNodes].sort((a, b) => {
+        const rowA = Math.floor(a.position.y / 100);
+        const rowB = Math.floor(b.position.y / 100);
+        if (rowA !== rowB) return rowA - rowB;
+        return a.position.x - b.position.x;
+      });
+
+      // Find the starting position (top-left of bounding box)
+      const startX = Math.min(...sortedNodes.map((n) => n.position.x));
+      const startY = Math.min(...sortedNodes.map((n) => n.position.y));
+
+      // Get max node dimensions for consistent spacing
+      const maxWidth = Math.max(
+        ...sortedNodes.map((n) => (n.style?.width as number) || (n.measured?.width) || 220)
+      );
+      const maxHeight = Math.max(
+        ...sortedNodes.map((n) => (n.style?.height as number) || (n.measured?.height) || 200)
+      );
+
+      // Position each node in the grid
+      sortedNodes.forEach((node, index) => {
+        const col = index % cols;
+        const row = Math.floor(index / cols);
+
+        onNodesChange([
+          {
+            type: "position",
+            id: node.id,
+            position: {
+              x: startX + col * (maxWidth + STACK_GAP),
+              y: startY + row * (maxHeight + STACK_GAP),
             },
-          ]);
-
-          currentY += nodeHeight + STACK_GAP;
-        });
-      } else if (event.key === "h" || event.key === "H") {
-        // Stack horizontally - sort by current x position to maintain relative order
-        const sortedNodes = [...selectedNodes].sort((a, b) => a.position.x - b.position.x);
-
-        // Use the topmost y position as the alignment point
-        const alignY = Math.min(...sortedNodes.map((n) => n.position.y));
-
-        let currentX = sortedNodes[0].position.x;
-
-        sortedNodes.forEach((node) => {
-          const nodeWidth = (node.style?.width as number) || (node.measured?.width) || 220;
-
-          onNodesChange([
-            {
-              type: "position",
-              id: node.id,
-              position: { x: currentX, y: alignY },
-            },
-          ]);
-
-          currentX += nodeWidth + STACK_GAP;
-        });
-      } else if (event.key === "g" || event.key === "G") {
-        // Arrange as grid
-        const count = selectedNodes.length;
-        const cols = Math.ceil(Math.sqrt(count));
-
-        // Sort nodes by their current position (top-to-bottom, left-to-right)
-        const sortedNodes = [...selectedNodes].sort((a, b) => {
-          const rowA = Math.floor(a.position.y / 100);
-          const rowB = Math.floor(b.position.y / 100);
-          if (rowA !== rowB) return rowA - rowB;
-          return a.position.x - b.position.x;
-        });
-
-        // Find the starting position (top-left of bounding box)
-        const startX = Math.min(...sortedNodes.map((n) => n.position.x));
-        const startY = Math.min(...sortedNodes.map((n) => n.position.y));
-
-        // Get max node dimensions for consistent spacing
-        const maxWidth = Math.max(
-          ...sortedNodes.map((n) => (n.style?.width as number) || (n.measured?.width) || 220)
-        );
-        const maxHeight = Math.max(
-          ...sortedNodes.map((n) => (n.style?.height as number) || (n.measured?.height) || 200)
-        );
-
-        // Position each node in the grid
-        sortedNodes.forEach((node, index) => {
-          const col = index % cols;
-          const row = Math.floor(index / cols);
-
-          onNodesChange([
-            {
-              type: "position",
-              id: node.id,
-              position: {
-                x: startX + col * (maxWidth + STACK_GAP),
-                y: startY + row * (maxHeight + STACK_GAP),
-              },
-            },
-          ]);
-        });
-      }
+          },
+        ]);
+      });
+    }
   }, [nodes, onNodesChange, copySelectedNodes, pasteNodes, clearClipboard, clipboard, getViewport, addNode, updateNodeData, executeWorkflow]);
 
   useEffect(() => {
@@ -1064,8 +1074,8 @@ export function WorkflowCanvas() {
               {dropType === "workflow"
                 ? "Drop to load workflow"
                 : dropType === "node"
-                ? "Drop to create node"
-                : "Drop image to create node"}
+                  ? "Drop to create node"
+                  : "Drop image to create node"}
             </p>
           </div>
         </div>
