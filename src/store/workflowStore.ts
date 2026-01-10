@@ -30,6 +30,7 @@ import { useToast } from "@/components/Toast";
 import { calculateGenerationCost } from "@/utils/costCalculator";
 import { logger } from "@/utils/logger";
 import { externalizeWorkflowImages, hydrateWorkflowImages } from "@/utils/imageStorage";
+import { compressImages } from "@/utils/imageCompression";
 
 export type EdgeStyle = "angular" | "curved";
 
@@ -701,12 +702,12 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
       nodes: state.nodes.map((node) =>
         node.groupId === groupId
           ? {
-              ...node,
-              position: {
-                x: node.position.x + delta.x,
-                y: node.position.y + delta.y,
-              },
-            }
+            ...node,
+            position: {
+              x: node.position.x + delta.x,
+              y: node.position.y + delta.y,
+            },
+          }
           : node
       ) as WorkflowNode[],
       hasUnsavedChanges: true,
@@ -984,8 +985,24 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
             try {
               const nodeData = node.data as NanoBananaNodeData;
 
+              // Komprese obrázků před odesláním aby se zkrátil network transfer
+              // a předešlo se Netlify 504 timeout (26s limit)
+              logger.info('image.compression', 'Compressing images before API call', {
+                nodeId: node.id,
+                imageCount: images.length,
+              });
+
+              const compressedImages = await compressImages(images, 1536, 1536, 0.85);
+
+              logger.info('image.compression', 'Images compressed successfully', {
+                nodeId: node.id,
+                originalSize: images.join('').length,
+                compressedSize: compressedImages.join('').length,
+                reduction: `${(100 - (compressedImages.join('').length / images.join('').length) * 100).toFixed(1)}%`,
+              });
+
               const requestPayload = {
-                images,
+                images: compressedImages,
                 prompt: text,
                 aspectRatio: nodeData.aspectRatio,
                 resolution: nodeData.resolution,
@@ -998,7 +1015,7 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
                 model: nodeData.model,
                 aspectRatio: nodeData.aspectRatio,
                 resolution: nodeData.resolution,
-                imageCount: images.length,
+                imageCount: compressedImages.length,
                 prompt: text,
               });
 
@@ -1418,12 +1435,25 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
           error: null,
         });
 
+        // Komprese obrázků před odesláním aby se zkrátil network transfer
+        logger.info('image.compression', 'Compressing images for regeneration', {
+          nodeId,
+          imageCount: images.length,
+        });
+
+        const compressedImages = await compressImages(images, 1536, 1536, 0.85);
+
+        logger.info('image.compression', 'Images compressed for regeneration', {
+          nodeId,
+          reduction: `${(100 - (compressedImages.join('').length / images.join('').length) * 100).toFixed(1)}%`,
+        });
+
         logger.info('api.gemini', 'Calling Gemini API for node regeneration', {
           nodeId,
           model: nodeData.model,
           aspectRatio: nodeData.aspectRatio,
           resolution: nodeData.resolution,
-          imageCount: images.length,
+          imageCount: compressedImages.length,
           prompt: text,
         });
 
@@ -1431,7 +1461,7 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            images,
+            images: compressedImages,
             prompt: text,
             aspectRatio: nodeData.aspectRatio,
             resolution: nodeData.resolution,

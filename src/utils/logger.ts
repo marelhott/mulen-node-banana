@@ -21,6 +21,7 @@ export type LogCategory =
   | 'api.openai'
   | 'api.llm'
   | 'api.error'
+  | 'image.compression'
   | 'file.save'
   | 'file.load'
   | 'file.error'
