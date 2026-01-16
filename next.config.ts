@@ -6,10 +6,9 @@ const nextConfig: NextConfig = {
     serverActions: {
       bodySizeLimit: "50mb",
     },
-    // @ts-ignore
-    outputFileTracingExcludes: {
-      '*': ['./public/community-workflows/**'],
-    },
+  },
+  outputFileTracingExcludes: {
+    '*': ['./public/community-workflows/**'],
   },
   turbopack: {
     root: __dirname,
