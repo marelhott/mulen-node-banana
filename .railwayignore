@@ -1,0 +1,49 @@
+# Railway ignore file
+# Similar to .gitignore but for Railway deployments
+
+# Development files
+.git
+.github
+*.md
+!README.md
+!RAILWAY_DEPLOY.md
+
+# Tests
+src/**/__tests__
+src/test
+*.test.ts
+*.test.tsx
+vitest.config.ts
+
+# Examples and docs
+examples/
+public/sample-images/
+prd-image-workflow.md
+CLAUDE.md
+
+# Logs
+logs/
+*.log
+
+# Local env files
+.env.local
+.env*.local
+
+# IDE
+.vscode
+.idea
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build artifacts (will be rebuilt)
+.next/
+node_modules/
+
+# Large files
+*.psd
+*.zip
+*.mp4
+*.mov
+*.wav
